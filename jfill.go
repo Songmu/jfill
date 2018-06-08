@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
 	"regexp"
 	"strings"
+	"syscall"
 
 	scan "github.com/mattn/go-scan"
 	"github.com/pkg/errors"
@@ -23,26 +25,38 @@ func Run(argv []string) int {
 		log.Println(err)
 		return exitError
 	}
-	if stat.Mode()&os.ModeCharDevice != 0 {
-		log.Println("no input from stdin")
-		return exitOK
-	}
 
 	var tree interface{}
-	if err := json.NewDecoder(os.Stdin).Decode(&tree); err != nil {
-		log.Println(err)
-		return exitError
+	if stat.Mode()&os.ModeCharDevice == 0 {
+		// input from pipe
+		if err := json.NewDecoder(os.Stdin).Decode(&tree); err != nil {
+			log.Println(err)
+			return exitError
+		}
 	}
 
+	var cmdArgs []string
 	for _, arg := range argv {
 		str, err := fill(arg, tree)
 		if err != nil {
 			log.Println(err)
 			return exitError
 		}
-		log.Println(str)
+		cmdArgs = append(cmdArgs, str)
 	}
 
+	if len(cmdArgs) == 0 {
+		return exitOK
+	}
+	exe, err := exec.LookPath(cmdArgs[0])
+	if err != nil {
+		log.Println(err)
+		return exitError
+	}
+	if err := syscall.Exec(exe, cmdArgs, os.Environ()); err != nil {
+		log.Println(err)
+		return exitError
+	}
 	return exitOK
 }
 
