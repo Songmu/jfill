@@ -5,10 +5,8 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"os/exec"
 	"regexp"
 	"strings"
-	"syscall"
 
 	scan "github.com/mattn/go-scan"
 	"github.com/pkg/errors"
@@ -57,11 +55,7 @@ func run(argv []string) error {
 	if len(cmdArgs) == 0 {
 		return nil
 	}
-	exe, err := exec.LookPath(cmdArgs[0])
-	if err != nil {
-		return err
-	}
-	return syscall.Exec(exe, cmdArgs, os.Environ())
+	return runCmd(cmdArgs)
 }
 
 var fillReg = regexp.MustCompile(`\{\{` +
