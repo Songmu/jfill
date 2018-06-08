@@ -29,7 +29,24 @@ func Run(argv []string) int {
 	return exitOK
 }
 
+func printUsage() {
+	fmt.Printf(`Usage:
+  %% echo '{"key":"value"}' | jfill echo {{key}}
+  value
+
+Version: %s (rev: %s)
+
+Assemble command using JSON via STDIN and execute it.
+`, version, revision)
+}
+
+var helpReg = regexp.MustCompile(`^--?h(?:elp)?$`)
+
 func run(argv []string) error {
+	if len(argv) == 0 || helpReg.MatchString(argv[0]) {
+		printUsage()
+		return nil
+	}
 	stat, err := os.Stdin.Stat()
 	if err != nil {
 		return err
@@ -51,10 +68,6 @@ func run(argv []string) error {
 		}
 		cmdArgs = append(cmdArgs, str)
 	}
-
-	if len(cmdArgs) == 0 {
-		return nil
-	}
 	return runCmd(cmdArgs)
 }
 
@@ -67,10 +80,6 @@ func fill(str string, tree interface{}) (string, error) {
 	var retErr error
 	ret := fillReg.ReplaceAllStringFunc(str, func(match string) string {
 		m := fillReg.FindStringSubmatch(match)
-		if len(m) < 3 {
-			retErr = fmt.Errorf("something went wrong")
-			return ""
-		}
 		jpath := m[1]
 		if !strings.HasPrefix(jpath, "/") {
 			jpath = "/" + jpath
