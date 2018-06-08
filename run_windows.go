@@ -8,7 +8,7 @@ import (
 )
 
 func runCmd(argv []string) error {
-	cmd := exec.Command(argv[0], argv[1:])
+	cmd := exec.Command(argv[0], argv[1:]...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Wait(); err != nil {
