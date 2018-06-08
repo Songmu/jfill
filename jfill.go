@@ -20,18 +20,28 @@ const (
 )
 
 func Run(argv []string) int {
-	stat, err := os.Stdin.Stat()
+	err := run(argv)
 	if err != nil {
 		log.Println(err)
+		if extr, ok := err.(interface{ ExitCode() int }); ok {
+			return extr.ExitCode()
+		}
 		return exitError
+	}
+	return exitOK
+}
+
+func run(argv []string) error {
+	stat, err := os.Stdin.Stat()
+	if err != nil {
+		return err
 	}
 
 	var tree interface{}
 	if stat.Mode()&os.ModeCharDevice == 0 {
 		// input from pipe
 		if err := json.NewDecoder(os.Stdin).Decode(&tree); err != nil {
-			log.Println(err)
-			return exitError
+			return err
 		}
 	}
 
@@ -39,25 +49,19 @@ func Run(argv []string) int {
 	for _, arg := range argv {
 		str, err := fill(arg, tree)
 		if err != nil {
-			log.Println(err)
-			return exitError
+			return err
 		}
 		cmdArgs = append(cmdArgs, str)
 	}
 
 	if len(cmdArgs) == 0 {
-		return exitOK
+		return nil
 	}
 	exe, err := exec.LookPath(cmdArgs[0])
 	if err != nil {
-		log.Println(err)
-		return exitError
+		return err
 	}
-	if err := syscall.Exec(exe, cmdArgs, os.Environ()); err != nil {
-		log.Println(err)
-		return exitError
-	}
-	return exitOK
+	return syscall.Exec(exe, cmdArgs, os.Environ())
 }
 
 var fillReg = regexp.MustCompile(`\{\{` +
