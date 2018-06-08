@@ -34,13 +34,6 @@ func Run(argv []string) int {
 		return exitError
 	}
 
-	var age int
-	if err := scan.ScanTree(tree, "/age", &age); err != nil {
-		log.Println(err)
-		return exitError
-	}
-
-	log.Println(age)
 	for _, arg := range argv {
 		str, err := fill(arg, tree)
 		if err != nil {
