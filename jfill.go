@@ -17,6 +17,7 @@ const (
 	exitError
 )
 
+// Run the jfill
 func Run(argv []string) int {
 	err := run(argv)
 	if err != nil {
