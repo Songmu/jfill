@@ -11,7 +11,7 @@ jfill
 
 ## Description
 
-fill the command line from json via STDIN and exec the command
+Assemble command using JSON via STDIN and execute it
 
 ## Synopsis
 
